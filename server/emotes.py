@@ -1,9 +1,7 @@
 """Third-party emotes (7TV, BTTV, FFZ) — public APIs, no keys.
 
 Fetched once per channel and cached by the hub; the frontend does the
-word-to-image matching, so the message pipeline stays untouched. Twitch
-channels get all three sources; Kick channels get 7TV, the one service
-with linked Kick accounts.
+word-to-image matching, so the message pipeline stays untouched.
 """
 from __future__ import annotations
 
@@ -12,7 +10,6 @@ import logging
 
 from curl_cffi.requests import AsyncSession
 
-from .connectors.kick import CHANNEL_API as KICK_CHANNEL_API
 from .connectors.twitch import GQL_CLIENT_ID, GQL_URL
 
 logger = logging.getLogger(__name__)
@@ -42,18 +39,6 @@ async def fetch_channel_emotes(channel: str) -> dict[str, str]:
             if bttv:
                 emotes.update(_parse_bttv((bttv.get("channelEmotes") or []) + (bttv.get("sharedEmotes") or [])))
             stv = await _get_json(session, f"https://7tv.io/v3/users/twitch/{twitch_id}")
-            if stv:
-                emotes.update(_parse_7tv((stv.get("emote_set") or {}).get("emotes") or []))
-        return emotes
-
-
-async def fetch_kick_emotes(slug: str) -> dict[str, str]:
-    async with AsyncSession(impersonate="chrome") as session:
-        emotes = dict(await _stv_globals(session))
-        data = await _get_json(session, KICK_CHANNEL_API.format(slug=slug))
-        user_id = (data or {}).get("user_id")
-        if user_id:
-            stv = await _get_json(session, f"https://7tv.io/v3/users/kick/{user_id}")
             if stv:
                 emotes.update(_parse_7tv((stv.get("emote_set") or {}).get("emotes") or []))
         return emotes
@@ -89,11 +74,6 @@ async def _twitch_globals(session: AsyncSession) -> dict[str, str]:
             emotes.update(await _fetch_stv_globals(session))
             _twitch_global_cache = emotes
         return _twitch_global_cache
-
-
-async def _stv_globals(session: AsyncSession) -> dict[str, str]:
-    async with _global_lock:
-        return await _fetch_stv_globals(session)
 
 
 async def _fetch_stv_globals(session: AsyncSession) -> dict[str, str]:

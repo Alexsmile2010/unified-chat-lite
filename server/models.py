@@ -1,9 +1,10 @@
 from __future__ import annotations
 
-from dataclasses import asdict, dataclass, field
+import json
+from dataclasses import dataclass, field
 
 
-@dataclass
+@dataclass(slots=True)
 class Message:
     platform: str
     id: str
@@ -25,11 +26,36 @@ class Message:
     # Internal only: lowercase login for CLEARCHAT (ban/timeout) matching on
     # Twitch, where display names can differ from logins.
     author_login: str = ""
+    # Wire form, encoded once and reused for every viewer and every bootstrap.
+    _json: str | None = field(default=None, repr=False, compare=False)
 
     def to_payload(self) -> dict:
-        payload = asdict(self)
-        payload.pop("author_login", None)
-        return payload
+        return {
+            "platform": self.platform,
+            "id": self.id,
+            "channel": self.channel,
+            "author": self.author,
+            "color": self.color,
+            "badges": self.badges,
+            "text": self.text,
+            "emotes": self.emotes,
+            "timestamp": self.timestamp,
+            "deleted": self.deleted,
+            "kind": self.kind,
+            "avatar_url": self.avatar_url,
+            "source_name": self.source_name,
+            "bits": self.bits,
+            "notice": self.notice,
+        }
+
+    def to_json(self) -> str:
+        if self._json is None:
+            self._json = json.dumps(self.to_payload(), separators=(",", ":"))
+        return self._json
+
+    def mark_deleted(self) -> None:
+        self.deleted = True
+        self._json = None
 
 
 def prefix_text(prefix: str, text: str, emotes: list[dict]) -> tuple[str, list[dict]]:

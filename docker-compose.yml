@@ -1,7 +1,8 @@
 services:
   unified-chat-lite:
-    # build: .
-    image: kim3k/unified-chat-lite:latest
+    # Built from this checkout; the upstream image does not carry local changes.
+    build: .
+    image: unified-chat-lite:local
     container_name: unified-chat-lite
     restart: unless-stopped
     ports:

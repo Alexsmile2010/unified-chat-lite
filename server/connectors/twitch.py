@@ -178,7 +178,7 @@ class TwitchChat:
                     async for frame in ws:
                         for line in str(frame).split("\r\n"):
                             if line:
-                                await self._handle_line(line)
+                                await self._safe_line(line)
             except Exception as exc:
                 logger.warning("twitch irc connection error: %s", exc)
             finally:
@@ -192,6 +192,14 @@ class TwitchChat:
                 )
             await asyncio.sleep(self._backoff)
             self._backoff = min(self._backoff * 2, 30.0)
+
+    async def _safe_line(self, line: str) -> None:
+        """One line we cannot parse must cost that line, not the connection:
+        IRC has no replay, so a reconnect loses everything said meanwhile."""
+        try:
+            await self._handle_line(line)
+        except Exception:
+            logger.exception("twitch: skipped a line that failed to parse: %.500s", line)
 
     async def _handle_line(self, line: str) -> None:
         parsed = parse_line(line)

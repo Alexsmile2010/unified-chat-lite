@@ -8,8 +8,6 @@
     --accent: #f7f4ea;
     --twitch: #9146ff;
     --youtube: #ff0000;
-    --kick: #53fc18;
-    --tiktok: #25f4ee;
     --ok: #73f0a8;
     --warn: #ffd166;
     --danger: #ff7b7b;
@@ -218,14 +216,6 @@ h2 {
     color: var(--youtube);
 }
 
-.channel-field[data-platform="kick"] .channel-label {
-    color: var(--kick);
-}
-
-.channel-field[data-platform="tiktok"] .channel-label {
-    color: var(--tiktok);
-}
-
 .channel-input {
     padding: 6px 10px;
     border-radius: 8px;
@@ -253,6 +243,42 @@ h2 {
 
 .connect-button:hover {
     background: rgba(115, 240, 168, 0.12);
+}
+
+.obs-link-field {
+    margin-top: 4px;
+}
+
+.obs-link-field .channel-input {
+    color: var(--muted);
+    text-overflow: ellipsis;
+}
+
+.obs-link-copy {
+    min-width: 62px;
+    padding: 6px 10px;
+    border-radius: 8px;
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    background: transparent;
+    color: var(--text);
+    font: inherit;
+    font-size: 0.8rem;
+    cursor: pointer;
+    transition: background 160ms ease, border-color 160ms ease, color 160ms ease;
+}
+
+.obs-link-copy:hover:not(:disabled) {
+    background: rgba(255, 255, 255, 0.08);
+}
+
+.obs-link-copy:disabled {
+    opacity: 0.45;
+    cursor: not-allowed;
+}
+
+.obs-link-copy.copied {
+    border-color: rgba(115, 240, 168, 0.4);
+    color: var(--ok);
 }
 
 .input-field {
@@ -346,6 +372,44 @@ h2 {
 
 .viewer-badge.hidden {
     display: none;
+}
+
+/* OBS stream health, next to the viewer count. */
+.obs-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    flex-shrink: 0;
+    height: 26px;
+    padding: 0 10px;
+    border-radius: 999px;
+    border: 1px solid rgba(255, 255, 255, 0.14);
+    background: rgba(255, 255, 255, 0.05);
+    color: var(--text);
+    font-size: 0.8rem;
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+}
+
+.obs-badge.hidden {
+    display: none;
+}
+
+.obs-badge[data-level="warn"] {
+    border-color: rgba(255, 209, 102, 0.55);
+}
+
+.obs-badge[data-level="error"] {
+    border-color: rgba(255, 123, 123, 0.65);
+    background: rgba(255, 123, 123, 0.12);
+}
+
+.player-controls .obs-badge {
+    height: 32px;
+    border-radius: 10px;
+    background: rgba(30, 40, 60, 0.45);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
 }
 
 .status-dot {
@@ -514,24 +578,6 @@ h2 {
 .filter-button.active[data-platform="youtube"] .chip-dot {
     background: var(--youtube);
     box-shadow: 0 0 8px var(--youtube);
-}
-
-.filter-button.active[data-platform="kick"] {
-    border-color: rgba(83, 252, 24, 0.4);
-}
-
-.filter-button.active[data-platform="kick"] .chip-dot {
-    background: var(--kick);
-    box-shadow: 0 0 8px var(--kick);
-}
-
-.filter-button.active[data-platform="tiktok"] {
-    border-color: rgba(37, 244, 238, 0.4);
-}
-
-.filter-button.active[data-platform="tiktok"] .chip-dot {
-    background: var(--tiktok);
-    box-shadow: 0 0 8px var(--tiktok);
 }
 
 .settings-rows {
@@ -851,16 +897,6 @@ h2 {
     background: rgba(255, 0, 0, 0.16);
 }
 
-.platform-pill.kick {
-    background: rgba(83, 252, 24, 0.18);
-    color: #d7ffd0;
-}
-
-.platform-pill.tiktok {
-    background: rgba(37, 244, 238, 0.14);
-    color: #d6fdfb;
-}
-
 .message-time {
     color: var(--muted);
     font-size: 0.82rem;
@@ -1112,10 +1148,6 @@ h2 {
 
 .player-source.active[data-platform="twitch"] {
     border-color: rgba(145, 70, 255, 0.65);
-}
-
-.player-source.active[data-platform="kick"] {
-    border-color: rgba(83, 252, 24, 0.55);
 }
 
 /* --- Alert sounds --- */

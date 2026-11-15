@@ -31,8 +31,6 @@ const state = {
   filters: {
     twitch: true,
     youtube: true,
-    kick: true,
-    tiktok: true,
   },
 };
 const MAX_VISIBLE_MESSAGES = isOverlay && overlayOptions.max ? overlayOptions.max : 200;
@@ -40,16 +38,14 @@ const MAX_VISIBLE_MESSAGES = isOverlay && overlayOptions.max ? overlayOptions.ma
 const feedEl = document.getElementById("feed");
 const statusGridEl = document.getElementById("status-grid");
 const channelsFormEl = document.getElementById("channels-form");
-const PLATFORMS = ["twitch", "kick", "youtube", "tiktok"];
+const PLATFORMS = ["twitch", "youtube"];
 const channelInputs = Object.fromEntries(PLATFORMS.map((p) => [p, document.getElementById(`channel-${p}`)]));
 const channelClears = Object.fromEntries(PLATFORMS.map((p) => [p, document.getElementById(`clear-${p}`)]));
 
-const PLATFORM_NAMES = { twitch: "Twitch", youtube: "YouTube", kick: "Kick", tiktok: "TikTok" };
+const PLATFORM_NAMES = { twitch: "Twitch", youtube: "YouTube" };
 const PLATFORM_SVGS = {
   twitch: `<svg viewBox="0 0 256 268" aria-hidden="true"><path fill="#9146ff" d="M17.46 0L0 46.56v185.21h63.14V268h46.87l36.49-36.23h54.91L256 177.68V0H17.46zm23.07 23.07H232.9v143.14l-41.47 41.47h-69.15L85.79 244.2v-36.52H40.53V23.07zm69.15 104.55h23.07V69.26h-23.07v58.36zm63.14 0h23.07V69.26h-23.07v58.36z"/></svg>`,
   youtube: `<svg viewBox="0 0 576 512" aria-hidden="true"><path fill="#ff0000" d="M549.66 124.63a68.28 68.28 0 0 0-48.05-48.28C458.78 64 288 64 288 64S117.22 64 74.39 76.35a68.28 68.28 0 0 0-48.05 48.28C14.48 167.83 14.48 256 14.48 256s0 88.17 11.86 131.37a68.28 68.28 0 0 0 48.05 48.28C117.22 448 288 448 288 448s170.78 0 213.61-12.35a68.28 68.28 0 0 0 48.05-48.28C561.52 344.17 561.52 256 561.52 256s0-88.17-11.86-131.37zM232.15 337.28V174.72L374.86 256l-142.71 81.28z"/></svg>`,
-  kick: `<img src="assets/kick-logo.ico" alt="" aria-hidden="true">`,
-  tiktok: `<svg viewBox="0 0 448 512" aria-hidden="true"><path fill="#eef4ff" d="M448,209.91a210.06,210.06,0,0,1-122.77-39.25V349.38A162.55,162.55,0,1,1,185,188.31V278.2a74.62,74.62,0,1,0,52.23,71.18V0l88,0a121.18,121.18,0,0,0,1.86,22.17h0A122.18,122.18,0,0,0,381,102.39a121.43,121.43,0,0,0,67,20.14Z"/></svg>`,
 };
 
 // Platform icon in messages is opt-out.
@@ -95,7 +91,7 @@ function readBadgesPreference() {
 function sourceAvatarMarkup(message) {
   if (!message.avatar_url) return "";
   const title = message.source_name ? `${message.source_name}'s chat` : "Shared chat source";
-  return `<img class="source-streamer-avatar" src="${escapeHtml(message.avatar_url)}" alt="" title="${escapeHtml(title)}">`;
+  return `<img class="source-streamer-avatar" decoding="async" src="${escapeHtml(message.avatar_url)}" alt="" title="${escapeHtml(title)}">`;
 }
 
 function badgesMarkup(message) {
@@ -104,7 +100,7 @@ function badgesMarkup(message) {
     const name = String(badge).split("/")[0].toLowerCase();
     const id = TWITCH_BADGE_IDS[name];
     if (!id) return "";
-    return `<img class="badge" src="https://static-cdn.jtvnw.net/badges/v1/${id}/1" alt="${escapeHtml(name)}" title="${escapeHtml(name)}">`;
+    return `<img class="badge" decoding="async" src="https://static-cdn.jtvnw.net/badges/v1/${id}/1" alt="${escapeHtml(name)}" title="${escapeHtml(name)}">`;
   }).join("");
 }
 
@@ -219,7 +215,6 @@ function linkifyText(text) {
 
 const EMOTE_IMAGE_URLS = {
   twitch: (id) => `https://static-cdn.jtvnw.net/emoticons/v2/${encodeURIComponent(id)}/default/dark/1.0`,
-  kick: (id) => `https://files.kick.com/emotes/${encodeURIComponent(id)}/fullsize`,
   youtube: (id) => id, // YouTube emote ids are complete image URLs
 };
 
@@ -238,7 +233,7 @@ function readThirdPartyEmotesPreference() {
 }
 
 function emoteImg(url, name) {
-  return `<img class="emote" src="${escapeHtml(url)}" alt="${escapeHtml(name)}" title="${escapeHtml(name)}">`;
+  return `<img class="emote" decoding="async" src="${escapeHtml(url)}" alt="${escapeHtml(name)}" title="${escapeHtml(name)}">`;
 }
 
 // Global cheermotes from Twitch's open CDN, only applied to messages that
@@ -290,7 +285,7 @@ function cheermoteMarkup(word) {
   const amount = Number(digits);
   const [tier, color] = cheerTier(amount);
   const image = CHEERMOTE_PREFIXES.has(prefix)
-    ? `<img class="emote" src="https://d3aqoihi2n8ty8.cloudfront.net/actions/${prefix}/dark/animated/${tier}/1.gif" alt="${escapeHtml(word)}" title="${escapeHtml(word)}">`
+    ? `<img class="emote" decoding="async" src="https://d3aqoihi2n8ty8.cloudfront.net/actions/${prefix}/dark/animated/${tier}/1.gif" alt="${escapeHtml(word)}" title="${escapeHtml(word)}">`
     : `<span title="${escapeHtml(word)}">${bitsGemSvg(color)}</span>`;
   return `${image}<span class="cheer-amount" style="color:${color}">${amount}</span>`;
 }
@@ -308,7 +303,7 @@ function paidNoticeMarkup(message) {
 }
 
 function renderPlainText(text, platform, cheers) {
-  if (platform !== "twitch" && platform !== "kick") return linkifyText(text);
+  if (platform !== "twitch") return linkifyText(text);
   const emoteMap = showThirdPartyEmotes ? thirdPartyEmotes.get(platform) : undefined;
   if (!emoteMap?.size && !cheers?.size) return linkifyText(text);
   return text.split(" ").map((word) => {
@@ -331,7 +326,7 @@ function renderMessageText(text, emotes, platform, bits = 0) {
       result += renderPlainText(chars.slice(cursor, emote.begin).join(""), platform, cheers);
     }
     result += emote.gif
-      ? `<img class="chat-gif" src="${escapeHtml(emote.id)}" alt="${escapeHtml(emote.text)}" title="${escapeHtml(emote.text)}" loading="lazy">`
+      ? `<img class="chat-gif" decoding="async" src="${escapeHtml(emote.id)}" alt="${escapeHtml(emote.text)}" title="${escapeHtml(emote.text)}" loading="lazy">`
       : emoteImg(emoteUrl(emote.id), emote.text);
     cursor = emote.end;
   }
@@ -455,6 +450,9 @@ if (syncChannel) {
       case "alertUrls":
         applyPopoutAlerts(payload.urls);
         break;
+      case "obsMonitor":
+        applyObsConfig(payload.config);
+        break;
       case "use24hClock":
         use24hClock = Boolean(payload.value);
         renderMessages();
@@ -463,30 +461,96 @@ if (syncChannel) {
   });
 }
 
-function addMessage(message) {
-  const wasNearBottom = isNearBottom();
-  state.messages.push(message);
-  const limit = wasNearBottom ? MAX_VISIBLE_MESSAGES : MAX_VISIBLE_MESSAGES * 5;
-  if (state.messages.length > limit) {
-    state.messages = state.messages.slice(-limit);
-  }
-  renderMessages();
-  if (!wasNearBottom) {
-    unseenCount += 1;
-    updateScrollButton();
-  }
+// Rendering. The feed is append-only: every message becomes one card, built
+// once. New cards are queued and added as a single batch per frame and the
+// oldest are evicted from the top, so the cost of a message stays flat no
+// matter how busy the chat is. A full rebuild (renderMessages) is kept for
+// the rare events that change how every card looks: a bootstrap, a filter or
+// a setting.
+const EMPTY_STATE_HTML = `<div class="empty-state">No messages yet. Connect to a channel to get started.</div>`;
+const FLUSH_FALLBACK_MS = 100;
+const cardTemplate = document.createElement("template");
+const cardById = new Map();
+let pendingMessages = [];
+let flushFrame = 0;
+let flushTimer = 0;
+let feedHasCards = false;
+// Whether the feed follows new messages. The scroll listener keeps it
+// current, so adding a message never has to measure the page.
+let pinnedToBottom = true;
+
+const scrollBottomBtn = document.getElementById("scroll-bottom");
+let unseenCount = 0;
+
+// Scrolled-up readers keep a longer backlog so the text under their eyes
+// isn't evicted mid-read.
+function feedLimit() {
+  return pinnedToBottom ? MAX_VISIBLE_MESSAGES : MAX_VISIBLE_MESSAGES * 5;
 }
 
-function markDeleted(predicate) {
-  const deletedIds = [];
-  for (const message of state.messages) {
-    if (predicate(message) && !message.deleted) {
-      message.deleted = true;
-      deletedIds.push(message.id);
+function isVisible(message) {
+  return state.filters[message.platform] !== false;
+}
+
+function addMessage(message) {
+  state.messages.push(message);
+  pendingMessages.push(message);
+  if (!pinnedToBottom) unseenCount += 1;
+  scheduleFlush();
+}
+
+function scheduleFlush() {
+  if (flushTimer) return;
+  // rAF paces rendering to the display; the timer covers hidden tabs and
+  // inactive OBS sources, where rAF never fires.
+  flushFrame = requestAnimationFrame(flushPending);
+  flushTimer = setTimeout(flushPending, FLUSH_FALLBACK_MS);
+}
+
+function cancelFlush() {
+  cancelAnimationFrame(flushFrame);
+  clearTimeout(flushTimer);
+  flushFrame = 0;
+  flushTimer = 0;
+}
+
+function removeCard(card) {
+  if (cardById.get(card.dataset.id) === card) cardById.delete(card.dataset.id);
+  card.remove();
+}
+
+function flushPending() {
+  cancelFlush();
+  const limit = feedLimit();
+  if (state.messages.length > limit) state.messages = state.messages.slice(-limit);
+
+  let batch = pendingMessages.filter(isVisible);
+  pendingMessages = [];
+  if (batch.length > limit) batch = batch.slice(-limit);
+  if (batch.length) {
+    if (!feedHasCards) {
+      feedEl.textContent = "";
+      feedHasCards = true;
     }
+    cardTemplate.innerHTML = batch.map(renderCard).join("");
+    for (const card of cardTemplate.content.children) cardById.set(card.dataset.id, card);
+    feedEl.appendChild(cardTemplate.content);
+    for (let extra = feedEl.childElementCount - limit; extra > 0; extra -= 1) {
+      removeCard(feedEl.firstElementChild);
+    }
+    if (pinnedToBottom) feedEl.scrollTop = feedEl.scrollHeight;
   }
-  if (!deletedIds.length) return;
-  renderMessages();
+  if (!pinnedToBottom) updateScrollButton();
+}
+
+function markDeleted(ids) {
+  const wanted = new Set(ids);
+  // Messages still waiting in the pending batch are the same objects, so
+  // they render as deleted when their card is built.
+  for (const message of state.messages) {
+    if (wanted.has(message.id)) message.deleted = true;
+  }
+  for (const id of wanted) cardById.get(id)?.classList.add("deleted");
 }
 
 // Negative delay resumes the fade mid-life after a DOM rebuild.
@@ -496,66 +560,57 @@ function overlayFadeStyle(message) {
   return ` style="animation-delay: ${OVERLAY_FADE_MS - OVERLAY_FADE_OUT_MS - age}ms"`;
 }
 
-function renderMessages() {
-  const visibleMessages = state.messages.filter((message) => state.filters[message.platform] !== false);
+function renderCard(message) {
+  let messageClass = message.deleted ? "message-card deleted" : "message-card";
+  if (highlightMentions && message.kind !== "system" && mentionRegex?.test(message.text)) {
+    messageClass += " mention";
+  }
+  const open = `<article class="${messageClass}${message.kind === "system" ? " system-notice" : ""}" data-id="${escapeHtml(message.id)}" data-platform="${message.platform}"${overlayFadeStyle(message)}>`;
+  const lead = `<span class="message-time">${formatTime(message.timestamp)}</span> ${showPlatform ? platformMarkup(message.platform) : ""}${sourceAvatarMarkup(message)}`;
+  if (message.kind === "system") {
+    const paid = message.bits > 0 || Boolean(message.notice);
+    const body = message.text
+      ? `<span class="message-text${paid ? "" : " system-notice-text"}">${renderMessageText(message.text, message.emotes, message.platform, message.bits)}</span>`
+      : "";
+    return `${open}<span class="message-topline">${lead}${paid ? `${paidNoticeMarkup(message)} ` : ""}${body}</span></article>`;
+  }
+  const readableColor = ensureReadableColor(message.color);
+  const authorStyle = readableColor ? `style="color:${readableColor}"` : "";
+  return `${open}<span class="message-topline">${lead}${badgesMarkup(message)}<span class="author-name" ${authorStyle}>${escapeHtml(message.author)}:</span> <span class="message-text">${renderMessageText(message.text, message.emotes, message.platform, message.bits)}</span></span></article>`;
+}
 
-  if (!visibleMessages.length) {
-    feedEl.innerHTML = `<div class="empty-state">No messages yet. Connect to a channel to get started.</div>`;
+// Full rebuild from state.messages.
+function renderMessages() {
+  cancelFlush();
+  pendingMessages = [];
+  cardById.clear();
+  const visibleMessages = state.messages.filter(isVisible).slice(-feedLimit());
+  feedHasCards = visibleMessages.length > 0;
+  if (!feedHasCards) {
+    feedEl.innerHTML = EMPTY_STATE_HTML;
     return;
   }
-
-  const wasNearBottom = isNearBottom();
-
-  feedEl.innerHTML = visibleMessages.map((message) => {
-    let messageClass = message.deleted ? "message-card deleted" : "message-card";
-    if (highlightMentions && message.kind !== "system" && mentionRegex?.test(message.text)) {
-      messageClass += " mention";
-    }
-    if (message.kind === "system") {
-      const paid = message.bits > 0 || Boolean(message.notice);
-      const body = message.text
-        ? `<span class="message-text${paid ? "" : " system-notice-text"}">${renderMessageText(message.text, message.emotes, message.platform, message.bits)}</span>`
-        : "";
-      return `
-        <article class="${messageClass} system-notice" data-platform="${message.platform}"${overlayFadeStyle(message)}>
-          <span class="message-topline"><span class="message-time">${formatTime(message.timestamp)}</span> ${showPlatform ? platformMarkup(message.platform) : ""}${sourceAvatarMarkup(message)}${paid ? `${paidNoticeMarkup(message)} ` : ""}${body}</span>
-        </article>
-      `;
-    }
-    const readableColor = ensureReadableColor(message.color);
-    const authorStyle = readableColor ? `style="color:${readableColor}"` : "";
-    return `
-      <article class="${messageClass}" data-platform="${message.platform}"${overlayFadeStyle(message)}>
-        <span class="message-topline"><span class="message-time">${formatTime(message.timestamp)}</span> ${showPlatform ? platformMarkup(message.platform) : ""}${sourceAvatarMarkup(message)}${badgesMarkup(message)}<span class="author-name" ${authorStyle}>${escapeHtml(message.author)}:</span> <span class="message-text">${renderMessageText(message.text, message.emotes, message.platform, message.bits)}</span></span>
-      </article>
-    `;
-  }).join("");
-
-  requestAnimationFrame(() => {
-    if (wasNearBottom) {
-      feedEl.scrollTop = feedEl.scrollHeight;
-    }
-  });
+  feedEl.innerHTML = visibleMessages.map(renderCard).join("");
+  for (const card of feedEl.children) cardById.set(card.dataset.id, card);
+  if (pinnedToBottom) feedEl.scrollTop = feedEl.scrollHeight;
 }
 
 function isNearBottom() {
   return feedEl.scrollHeight - feedEl.scrollTop - feedEl.clientHeight < 100;
 }
 
-const scrollBottomBtn = document.getElementById("scroll-bottom");
-let unseenCount = 0;
-
 function updateScrollButton() {
   scrollBottomBtn.textContent = unseenCount ? `↓ ${unseenCount}` : "↓";
 }
 
 feedEl.addEventListener("scroll", () => {
-  if (isNearBottom()) {
+  pinnedToBottom = isNearBottom();
+  if (pinnedToBottom) {
     unseenCount = 0;
     updateScrollButton();
   }
-  scrollBottomBtn.classList.toggle("hidden", isNearBottom());
-});
+  scrollBottomBtn.classList.toggle("hidden", pinnedToBottom);
+}, { passive: true });
 
 scrollBottomBtn.addEventListener("click", () => {
   feedEl.scrollTop = feedEl.scrollHeight;
@@ -617,7 +672,7 @@ function viewerCountMarkup(count) {
 }
 
 function renderViewerBadges() {
-  const live = ["twitch", "youtube", "kick", "tiktok"]
+  const live = PLATFORMS
     .map((platform) => state.statuses.get(platform))
     .filter((status) => typeof status?.viewers === "number");
   const total = live.reduce((sum, status) => sum + status.viewers, 0);
@@ -632,7 +687,7 @@ function renderViewerBadges() {
 function renderStatuses() {
   renderViewerBadges();
   if (!statusGridEl) return;
-  const statuses = ["twitch", "youtube", "kick", "tiktok"].map((platform) =>
+  const statuses = PLATFORMS.map((platform) =>
     state.statuses.get(platform) || { platform, dot: "idle", state: "idle", detail: "Not connected" }
   );
   statusGridEl.innerHTML = statuses.map((status) => `
@@ -646,12 +701,44 @@ function renderStatuses() {
 }
 
 // Hub connection: subscribe and render; the server fans out per-channel events.
+// The server sends a ping every 10 s, so a socket that stays silent for
+// WATCHDOG_SILENCE_MS is dead even if the browser still reports it open
+// (sleep, Wi-Fi change, a proxy dropping the route). The watchdog replaces it
+// and the bootstrap that follows restores the visible feed.
+const WATCHDOG_SILENCE_MS = 25000;
+const WATCHDOG_INTERVAL_MS = 5000;
+const ONLINE_SILENCE_MS = 12000;
+
 class HubConnection {
   constructor() {
     this.socket = null;
     this.desired = null;
     this.reconnectDelay = 1000;
     this.reconnectTimer = null;
+    this.lastFrameAt = 0; // wall clock, so time spent asleep counts as silence
+    setInterval(() => this.checkAlive(WATCHDOG_SILENCE_MS), WATCHDOG_INTERVAL_MS);
+    window.addEventListener("online", () => this.checkAlive(ONLINE_SILENCE_MS));
+  }
+
+  checkAlive(maxSilenceMs) {
+    const socket = this.socket;
+    if (!socket || Date.now() - this.lastFrameAt < maxSilenceMs) return;
+    socket.close(); // may never complete on a dead link, so don't wait for it
+    this.handleClosed(socket, { retryNow: true });
+  }
+
+  handleClosed(socket, { retryNow = false } = {}) {
+    if (this.socket !== socket) return;
+    this.socket = null;
+    clearTimeout(this.reconnectTimer);
+    const delay = retryNow ? 0 : this.reconnectDelay;
+    for (const [platform, channel] of Object.entries(this.desired || {})) {
+      if (channel) {
+        setStatus({ platform, dot: "error", state: "disconnected", detail: `Hub connection lost, retrying in ${Math.round(delay / 1000)}s…` });
+      }
+    }
+    this.reconnectTimer = setTimeout(() => this.open(), delay);
+    this.reconnectDelay = Math.min(this.reconnectDelay * 2, 30000);
   }
 
   setChannels(channels) {
@@ -672,6 +759,7 @@ class HubConnection {
     const protocol = window.location.protocol === "https:" ? "wss" : "ws";
     const socket = new WebSocket(`${protocol}://${window.location.host}/ws`);
     this.socket = socket;
+    this.lastFrameAt = Date.now();
 
     socket.addEventListener("open", () => {
       this.reconnectDelay = 1000;
@@ -679,6 +767,8 @@ class HubConnection {
     });
 
     socket.addEventListener("message", (event) => {
+      if (this.socket !== socket) return; // late frame from a replaced socket
+      this.lastFrameAt = Date.now();
       let payload;
       try {
         payload = JSON.parse(event.data);
@@ -688,17 +778,7 @@ class HubConnection {
       this.handlePayload(payload);
     });
 
-    socket.addEventListener("close", () => {
-      if (this.socket !== socket) return;
-      this.socket = null;
-      for (const [platform, channel] of Object.entries(this.desired || {})) {
-        if (channel) {
-          setStatus({ platform, dot: "error", state: "disconnected", detail: `Hub connection lost, retrying in ${Math.round(this.reconnectDelay / 1000)}s…` });
-        }
-      }
-      this.reconnectTimer = setTimeout(() => this.open(), this.reconnectDelay);
-      this.reconnectDelay = Math.min(this.reconnectDelay * 2, 30000);
-    });
+    socket.addEventListener("close", () => this.handleClosed(socket));
   }
 
   handlePayload(payload) {
@@ -724,11 +804,16 @@ class HubConnection {
         renderMessages();
         break;
       }
+      case "batch":
+        for (const event of payload.events) this.handlePayload(event);
+        break;
+      case "ping":
+        break; // liveness only; receiving it already reset the watchdog
       case "message":
         addMessage(payload.message);
         break;
       case "deleted":
-        markDeleted((m) => payload.ids.includes(m.id));
+        markDeleted(payload.ids);
         break;
       case "status":
         setStatus(payload.status);
@@ -793,6 +878,7 @@ function connectFromInputs({ updateUrl = true } = {}) {
   if (!hasAny && !hubConnection.socket) return;
   hubConnection.setChannels(channels);
   updateClearButtons(channels);
+  updateObsLink();
   updateMentionRegex(channels);
   resetHypeTrainBar();
   playerState.channels = channels;
@@ -813,6 +899,49 @@ function connectFromInputs({ updateUrl = true } = {}) {
     const query = params.toString();
     window.history.replaceState(null, "", query ? `?${query}` : window.location.pathname);
   }
+}
+
+// OBS overlay link: the full browser-source URL for whatever is typed in the
+// channel fields, so it can be pasted into OBS as is.
+const obsLinkEl = document.getElementById("obs-link");
+const obsLinkCopyEl = document.getElementById("obs-link-copy");
+let obsCopiedTimer = 0;
+
+function updateObsLink() {
+  if (!obsLinkEl) return;
+  const url = new URL("/overlay", window.location.origin);
+  for (const platform of PLATFORMS) {
+    const channel = channelInputs[platform].value.trim();
+    if (channel) url.searchParams.set(platform, channel);
+  }
+  const hasChannel = url.searchParams.size > 0;
+  obsLinkEl.value = hasChannel ? url.href : "";
+  obsLinkCopyEl.disabled = !hasChannel;
+}
+
+async function copyObsLink() {
+  const link = obsLinkEl.value;
+  if (!link) return;
+  try {
+    await navigator.clipboard.writeText(link);
+  } catch (_) {
+    // No Clipboard API outside secure contexts (e.g. opened by LAN IP over http).
+    obsLinkEl.select();
+    document.execCommand("copy");
+  }
+  obsLinkCopyEl.textContent = "Copied";
+  obsLinkCopyEl.classList.add("copied");
+  clearTimeout(obsCopiedTimer);
+  obsCopiedTimer = setTimeout(() => {
+    obsLinkCopyEl.textContent = "Copy";
+    obsLinkCopyEl.classList.remove("copied");
+  }, 1500);
+}
+
+if (obsLinkEl) {
+  obsLinkCopyEl.addEventListener("click", copyObsLink);
+  obsLinkEl.addEventListener("focus", () => obsLinkEl.select());
+  for (const input of Object.values(channelInputs)) input.addEventListener("input", updateObsLink);
 }
 
 function updateClearButtons(channels) {
@@ -1040,7 +1169,7 @@ if (togglePlatform) {
 
 // Stream player (popout + expanded chat). Twitch embeds require HTTPS (localhost excepted).
 const PLAYER_STORAGE_KEY = "popoutPlayer";
-const PLAYER_PLATFORMS = ["twitch", "kick", "youtube"];
+const PLAYER_PLATFORMS = ["twitch", "youtube"];
 
 // Embed URL for a platform, or null when it can't be played right now.
 function playerEmbedSrc(platform) {
@@ -1049,8 +1178,6 @@ function playerEmbedSrc(platform) {
   switch (platform) {
     case "twitch":
       return `https://player.twitch.tv/?channel=${encodeURIComponent(channel)}&parent=${encodeURIComponent(window.location.hostname)}&muted=true&autoplay=true`;
-    case "kick":
-      return `https://player.kick.com/${encodeURIComponent(channel)}?muted=true&autoplay=true`;
     case "youtube": {
       const videoId = state.statuses.get("youtube")?.video_id;
       return videoId
@@ -1111,7 +1238,7 @@ function renderPlayer() {
     return;
   }
   if (!playerState.source) {
-    playerFrameEl.innerHTML = `<div class="player-empty">Connect a live Twitch, Kick or YouTube channel to watch the stream here.</div>`;
+    playerFrameEl.innerHTML = `<div class="player-empty">Connect a live Twitch or YouTube channel to watch the stream here.</div>`;
     return;
   }
   const src = playerEmbedSrc(playerState.source);
@@ -1314,6 +1441,302 @@ function applyPopoutAlerts(urls) {
   window.history.replaceState(null, "", query ? `?${query}` : window.location.pathname);
 }
 
+// OBS monitor: read-only stream health straight from OBS's built-in WebSocket
+// server (obs-websocket v5). The browser talks to OBS directly, so the address
+// and password never leave this machine and the chat works the same without it.
+const OBS_STORAGE_KEY = "obsMonitor";
+const OBS_DEFAULT_URL = "ws://localhost:4455";
+const OBS_POLL_MS = 2000;
+const OBS_RETRY_MS = 5000;
+const OBS_DROP_ALERT_MS = 15000; // how long a fresh drop keeps the badge amber
+const OBS_AUTH_FAILED = 4009;
+
+// SHA-256 in plain JS: crypto.subtle only exists on secure origins, and this
+// page is often opened as http://<lan-ip>:8100.
+const SHA256_PRIMES = (() => {
+  const primes = [];
+  for (let n = 2; primes.length < 64; n += 1) {
+    if (primes.every((p) => n % p)) primes.push(n);
+  }
+  return primes;
+})();
+const SHA256_K = SHA256_PRIMES.map((p) => Math.floor((Math.cbrt(p) % 1) * 2 ** 32));
+const SHA256_H = SHA256_PRIMES.slice(0, 8).map((p) => Math.floor((Math.sqrt(p) % 1) * 2 ** 32));
+
+function sha256Base64(text) {
+  const input = new TextEncoder().encode(text);
+  const padded = new Uint8Array(((input.length + 9 + 63) >> 6) << 6);
+  padded.set(input);
+  padded[input.length] = 0x80;
+  const view = new DataView(padded.buffer);
+  view.setUint32(padded.length - 8, Math.floor(input.length / 2 ** 29));
+  view.setUint32(padded.length - 4, (input.length << 3) >>> 0);
+
+  const h = SHA256_H.slice();
+  const w = new Uint32Array(64);
+  const rotr = (x, n) => (x >>> n) | (x << (32 - n));
+  for (let offset = 0; offset < padded.length; offset += 64) {
+    for (let i = 0; i < 16; i += 1) w[i] = view.getUint32(offset + i * 4);
+    for (let i = 16; i < 64; i += 1) {
+      const s0 = rotr(w[i - 15], 7) ^ rotr(w[i - 15], 18) ^ (w[i - 15] >>> 3);
+      const s1 = rotr(w[i - 2], 17) ^ rotr(w[i - 2], 19) ^ (w[i - 2] >>> 10);
+      w[i] = (w[i - 16] + s0 + w[i - 7] + s1) >>> 0;
+    }
+    let [a, b, c, d, e, f, g, hh] = h;
+    for (let i = 0; i < 64; i += 1) {
+      const t1 = (hh + (rotr(e, 6) ^ rotr(e, 11) ^ rotr(e, 25)) + ((e & f) ^ (~e & g)) + SHA256_K[i] + w[i]) >>> 0;
+      const t2 = ((rotr(a, 2) ^ rotr(a, 13) ^ rotr(a, 22)) + ((a & b) ^ (a & c) ^ (b & c))) >>> 0;
+      hh = g; g = f; f = e; e = (d + t1) >>> 0;
+      d = c; c = b; b = a; a = (t1 + t2) >>> 0;
+    }
+    [a, b, c, d, e, f, g, hh].forEach((value, i) => { h[i] = (h[i] + value) >>> 0; });
+  }
+  const digest = new Uint8Array(32);
+  h.forEach((value, i) => new DataView(digest.buffer).setUint32(i * 4, value));
+  return btoa(String.fromCharCode(...digest));
+}
+
+function storedObsConfig() {
+  try {
+    const parsed = JSON.parse(window.localStorage.getItem(OBS_STORAGE_KEY) || "null");
+    return parsed && typeof parsed.url === "string" && parsed.url ? parsed : null;
+  } catch (_) {
+    return null;
+  }
+}
+
+function isValidObsUrl(value) {
+  try {
+    return ["ws:", "wss:"].includes(new URL(value).protocol);
+  } catch (_) {
+    return false;
+  }
+}
+
+class ObsMonitor {
+  constructor() {
+    this.config = null;
+    this.socket = null;
+    this.retryTimer = 0;
+    this.pollTimer = 0;
+    this.reset("off");
+  }
+
+  reset(phase) {
+    this.phase = phase; // off | connecting | offline | auth | ready
+    this.stream = null;
+    this.stats = null;
+    this.sample = null; // { bytes, at } for the bitrate delta
+    this.kbps = null;
+    this.lastDropAt = 0;
+  }
+
+  configure(config) {
+    clearTimeout(this.retryTimer);
+    clearInterval(this.pollTimer);
+    const old = this.socket;
+    this.socket = null;
+    old?.close();
+    this.config = config;
+    this.reset(config ? "connecting" : "off");
+    this.render();
+    if (config) this.connect();
+  }
+
+  connect() {
+    let socket;
+    try {
+      socket = new WebSocket(this.config.url);
+    } catch (_) {
+      this.reset("offline");
+      this.render();
+      return;
+    }
+    this.socket = socket;
+    socket.addEventListener("message", (event) => {
+      if (this.socket !== socket) return;
+      let frame;
+      try {
+        frame = JSON.parse(event.data);
+      } catch (_) {
+        return;
+      }
+      this.handleFrame(socket, frame);
+    });
+    socket.addEventListener("close", (event) => {
+      if (this.socket !== socket) return;
+      this.socket = null;
+      clearInterval(this.pollTimer);
+      const authFailed = event.code === OBS_AUTH_FAILED;
+      this.reset(authFailed ? "auth" : "offline");
+      this.render();
+      // A wrong password will not fix itself; everything else (OBS closed,
+      // server disabled) is worth retrying quietly.
+      if (!authFailed) this.retryTimer = setTimeout(() => this.connect(), OBS_RETRY_MS);
+    });
+  }
+
+  handleFrame(socket, frame) {
+    const data = frame.d || {};
+    if (frame.op === 0) { // Hello
+      const identify = { rpcVersion: 1, eventSubscriptions: 0 };
+      if (data.authentication) {
+        const secret = sha256Base64((this.config.password || "") + data.authentication.salt);
+        identify.authentication = sha256Base64(secret + data.authentication.challenge);
+      }
+      socket.send(JSON.stringify({ op: 1, d: identify }));
+    } else if (frame.op === 2) { // Identified
+      this.phase = "ready";
+      this.poll();
+      this.pollTimer = setInterval(() => this.poll(), OBS_POLL_MS);
+    } else if (frame.op === 7 && data.requestStatus?.result) { // RequestResponse
+      if (data.requestType === "GetStreamStatus") this.onStreamStatus(data.responseData || {});
+      if (data.requestType === "GetStats") this.stats = data.responseData || {};
+      this.render();
+    }
+  }
+
+  poll() {
+    if (this.socket?.readyState !== WebSocket.OPEN) return;
+    for (const requestType of ["GetStats", "GetStreamStatus"]) {
+      this.socket.send(JSON.stringify({ op: 6, d: { requestType, requestId: requestType } }));
+    }
+  }
+
+  onStreamStatus(status) {
+    const now = performance.now();
+    const previous = this.stream;
+    if (status.outputActive) {
+      const bytes = Number(status.outputBytes) || 0;
+      // The byte counter restarts with every stream; skip the sample that spans a restart.
+      if (this.sample && bytes >= this.sample.bytes && now > this.sample.at) {
+        this.kbps = ((bytes - this.sample.bytes) * 8) / (now - this.sample.at);
+      }
+      this.sample = { bytes, at: now };
+      if (previous?.outputActive && status.outputSkippedFrames > previous.outputSkippedFrames) {
+        this.lastDropAt = now;
+      }
+    } else {
+      this.sample = null;
+      this.kbps = null;
+      this.lastDropAt = 0;
+    }
+    this.stream = status;
+  }
+
+  // -> { text, level, title }, or null when the monitor is switched off.
+  view() {
+    switch (this.phase) {
+      case "off":
+        return null;
+      case "connecting":
+        return { text: "OBS…", level: "idle", title: `Connecting to OBS at ${this.config.url}` };
+      case "offline":
+        return {
+          text: "OBS offline", level: "idle",
+          title: `No answer from ${this.config.url}. Is OBS running with Tools → WebSocket Server Settings → Enable?`,
+        };
+      case "auth":
+        return { text: "OBS: wrong password", level: "error", title: "OBS rejected the password. Fix it under Settings → OBS monitor." };
+    }
+    const stream = this.stream;
+    if (!stream) return { text: "OBS…", level: "idle", title: "Connected to OBS, waiting for data" };
+    if (!stream.outputActive) return { text: "OBS: not live", level: "idle", title: "Connected to OBS. The stream is not running." };
+
+    const dropped = stream.outputSkippedFrames || 0;
+    const total = stream.outputTotalFrames || 0;
+    const percent = total ? (dropped / total) * 100 : 0;
+    const bitrate = this.kbps === null ? "…" : Math.round(this.kbps).toLocaleString();
+    let level = "ok";
+    if (this.lastDropAt && performance.now() - this.lastDropAt < OBS_DROP_ALERT_MS) level = "warn";
+    if (stream.outputReconnecting) level = "error";
+
+    const stats = this.stats || {};
+    const title = [
+      stream.outputReconnecting ? "OBS is reconnecting to the streaming server!" : `Live for ${stream.outputTimecode?.split(".")[0] || "?"}`,
+      `Dropped frames (network): ${dropped.toLocaleString()} of ${total.toLocaleString()} (${percent.toFixed(1)}%)`,
+      `Skipped frames (encoder lag, since OBS started): ${(stats.outputSkippedFrames ?? 0).toLocaleString()}`,
+      `Missed frames (render lag, since OBS started): ${(stats.renderSkippedFrames ?? 0).toLocaleString()}`,
+      `Congestion: ${Math.round((stream.outputCongestion || 0) * 100)}%`,
+      typeof stats.cpuUsage === "number" ? `OBS CPU: ${stats.cpuUsage.toFixed(1)}%   FPS: ${(stats.activeFps || 0).toFixed(0)}` : "",
+    ].filter(Boolean).join("\n");
+    return {
+      text: stream.outputReconnecting
+        ? "OBS reconnecting…"
+        : `${bitrate} kbps · ${dropped.toLocaleString()} dropped (${percent.toFixed(1)}%)`,
+      level,
+      title,
+    };
+  }
+
+  render() {
+    const view = this.view();
+    for (const badge of document.querySelectorAll(".obs-badge")) {
+      badge.classList.toggle("hidden", !view);
+      if (!view) continue;
+      badge.dataset.level = view.level;
+      badge.title = view.title;
+      badge.innerHTML = `<span class="status-dot ${view.level}" aria-hidden="true"></span>${escapeHtml(view.text)}`;
+    }
+  }
+}
+
+const obsMonitor = new ObsMonitor();
+
+function applyObsConfig(config) {
+  if (isOverlay) return; // nothing to monitor inside the OBS browser source itself
+  obsMonitor.configure(config && isValidObsUrl(config.url) ? config : null);
+}
+
+const obsEditBtn = document.getElementById("obs-edit");
+if (obsEditBtn) {
+  const editorEl = document.getElementById("obs-editor");
+  const urlEl = document.getElementById("obs-url");
+  const passwordEl = document.getElementById("obs-password");
+
+  const syncEditButton = () => {
+    obsEditBtn.textContent = storedObsConfig() ? "✎ On" : "+ Add";
+  };
+  const save = (config) => {
+    try {
+      if (config) {
+        window.localStorage.setItem(OBS_STORAGE_KEY, JSON.stringify(config));
+      } else {
+        window.localStorage.removeItem(OBS_STORAGE_KEY);
+      }
+    } catch (_) {}
+    broadcast({ type: "obsMonitor", config });
+    applyObsConfig(config);
+    editorEl.classList.add("hidden");
+    syncEditButton();
+  };
+
+  obsEditBtn.addEventListener("click", () => {
+    if (!editorEl.classList.toggle("hidden")) {
+      const config = storedObsConfig();
+      urlEl.value = config?.url || OBS_DEFAULT_URL;
+      passwordEl.value = config?.password || "";
+      urlEl.classList.remove("invalid");
+      (config ? urlEl : passwordEl).focus();
+    }
+  });
+  document.getElementById("obs-apply").addEventListener("click", () => {
+    const url = urlEl.value.trim() || OBS_DEFAULT_URL;
+    urlEl.classList.toggle("invalid", !isValidObsUrl(url));
+    if (isValidObsUrl(url)) save({ url, password: passwordEl.value });
+  });
+  document.getElementById("obs-remove").addEventListener("click", () => save(null));
+  editorEl.addEventListener("keydown", (event) => {
+    if (event.key === "Enter") {
+      event.preventDefault();
+      document.getElementById("obs-apply").click();
+    }
+  });
+  syncEditButton();
+}
+
+applyObsConfig(storedObsConfig());
+
 function channelsFromLocation() {
   const params = new URLSearchParams(window.location.search);
   let stored = {};
@@ -1372,19 +1795,20 @@ if (isPopout) {
     renderAlertFrames();
   }
   if (isOverlay && !OVERLAY_NEVER_FADE) {
-    // Prune messages the fade animation has already hidden.
-    setInterval(() => {
-      const cutoff = Date.now() - OVERLAY_FADE_MS;
-      const kept = state.messages.filter((message) => new Date(message.timestamp).getTime() >= cutoff);
-      if (kept.length !== state.messages.length) {
-        state.messages = kept;
-        renderMessages();
-      }
-    }, 1000);
+    // A card that has finished fading is gone for good: drop its node and its
+    // message, so nothing has to sweep the feed on a timer.
+    feedEl.addEventListener("animationend", (event) => {
+      const card = event.target;
+      if (event.animationName !== "overlay-fade" || !card.classList?.contains("message-card")) return;
+      const id = card.dataset.id;
+      removeCard(card);
+      state.messages = state.messages.filter((message) => message.id !== id);
+    });
   }
 } else {
   renderStatuses();
   restoreChannels();
+  updateObsLink();
   if (isExpanded) {
     alertUrls = mainAlertUrls();
     renderAlertFrames();

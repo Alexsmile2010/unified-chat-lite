@@ -10,7 +10,7 @@ logger = logging.getLogger(__name__)
 
 GQL_URL = "https://gql.twitch.tv/gql"
 GQL_CLIENT_ID = "kimne78kx3ncx6brgo4mv6wki5h1ko"
-IDLE_POLL_SECONDS = 60
+IDLE_POLL_SECONDS = 15  # also paces the viewer count; one small GQL query per poll
 ACTIVE_POLL_SECONDS = 15
 MAX_BACKOFF_SECONDS = 600
 HIDE_AFTER_MS = 5000

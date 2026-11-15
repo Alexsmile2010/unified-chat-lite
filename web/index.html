@@ -4,11 +4,11 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
 
-    <title>Unified Chat Lite — Multistream Chat: Twitch, YouTube, Kick, TikTok</title>
+    <title>Unified Chat Lite — Multistream Chat: Twitch and YouTube</title>
     <meta name="description"
-        content="Free multistream chat viewer for Twitch, YouTube, Kick & TikTok — one feed with 7TV/BTTV/FFZ emotes, stream player, alerts and OBS chat overlay. No login.">
+        content="Free multistream chat viewer for Twitch and YouTube — one feed with 7TV/BTTV/FFZ emotes, stream player, alerts and OBS chat overlay. No login.">
     <meta name="keywords"
-        content="multistream chat, combined chat, chat aggregator, twitch chat, youtube live chat, kick chat, tiktok live chat, obs chat overlay, multi chat viewer, unified chat, 7tv emotes, bttv emotes, ffz emotes, streamelements alerts, hype train, twitch badges, chat widget, dual stream chat">
+        content="multistream chat, combined chat, chat aggregator, twitch chat, youtube live chat, obs chat overlay, multi chat viewer, unified chat, 7tv emotes, bttv emotes, ffz emotes, streamelements alerts, hype train, twitch badges, chat widget, dual stream chat">
     <meta name="author" content="Kim AH">
     <meta name="robots" content="index, follow">
     <link rel="canonical" href="https://unified-chat.com/">
@@ -17,9 +17,9 @@
     <!-- Open Graph (Facebook, Discord, Slack, ...) -->
     <meta property="og:type" content="website">
     <meta property="og:site_name" content="Unified Chat Lite">
-    <meta property="og:title" content="Unified Chat Lite — Multistream Chat: Twitch, YouTube, Kick, TikTok">
+    <meta property="og:title" content="Unified Chat Lite — Multistream Chat: Twitch and YouTube">
     <meta property="og:description"
-        content="Twitch, YouTube, Kick & TikTok chats in one feed — 7TV/BTTV/FFZ emotes, stream player, alerts and OBS overlay. Free, no login.">
+        content="Twitch and YouTube chats in one feed — 7TV/BTTV/FFZ emotes, stream player, alerts and OBS overlay. Free, no login.">
     <meta property="og:url" content="https://unified-chat.com/">
     <meta property="og:image" content="https://unified-chat.com/assets/og-image.png">
     <meta property="og:image:width" content="1200">
@@ -27,9 +27,9 @@
 
     <!-- Twitter / X -->
     <meta name="twitter:card" content="summary_large_image">
-    <meta name="twitter:title" content="Unified Chat Lite — Multistream Chat: Twitch, YouTube, Kick, TikTok">
+    <meta name="twitter:title" content="Unified Chat Lite — Multistream Chat: Twitch and YouTube">
     <meta name="twitter:description"
-        content="Twitch, YouTube, Kick & TikTok chats in one feed — 7TV/BTTV/FFZ emotes, stream player, alerts and OBS overlay. Free, no login.">
+        content="Twitch and YouTube chats in one feed — 7TV/BTTV/FFZ emotes, stream player, alerts and OBS overlay. Free, no login.">
     <meta name="twitter:image" content="https://unified-chat.com/assets/og-image.png">
 
     <link rel="icon" href="assets/favicon.ico">
@@ -46,16 +46,16 @@
         "@type": "WebApplication",
         "name": "Unified Chat Lite",
         "url": "https://unified-chat.com/",
-        "description": "Free multistream chat viewer that combines Twitch, YouTube, Kick and TikTok live chats in one unified feed, with 7TV/BTTV/FFZ emotes, stream player, alert sounds and a transparent OBS chat overlay.",
+        "description": "Free multistream chat viewer that combines Twitch and YouTube live chats in one unified feed, with 7TV/BTTV/FFZ emotes, stream player, alert sounds and a transparent OBS chat overlay.",
         "applicationCategory": "EntertainmentApplication",
         "operatingSystem": "Any",
         "browserRequirements": "Requires JavaScript",
         "featureList": [
-            "Combined live chat for Twitch, YouTube, Kick and TikTok",
+            "Combined live chat for Twitch and YouTube",
             "7TV, BTTV and FFZ emotes",
             "Twitch badges and animated cheermotes",
             "Hype train progress bar",
-            "Embedded stream player (Twitch, Kick, YouTube)",
+            "Embedded stream player (Twitch, YouTube)",
             "StreamElements/Streamlabs alert sounds",
             "Transparent OBS chat overlay with auto-fading messages",
             "Expandable full-window chat, shareable links, installable as an app (PWA)"
@@ -105,21 +105,15 @@
                         <button id="clear-youtube" class="channel-clear hidden" type="button"
                             title="Disconnect YouTube">&#x2715;</button>
                     </div>
-                    <div class="channel-field" data-platform="kick">
-                        <span class="channel-label">Kick</span>
-                        <input id="channel-kick" class="input-field channel-input" type="text"
-                            placeholder="channel name" autocomplete="off" spellcheck="false">
-                        <button id="clear-kick" class="channel-clear hidden" type="button"
-                            title="Disconnect Kick">&#x2715;</button>
-                    </div>
-                    <div class="channel-field" data-platform="tiktok">
-                        <span class="channel-label">TikTok</span>
-                        <input id="channel-tiktok" class="input-field channel-input" type="text"
-                            placeholder="username" autocomplete="off" spellcheck="false">
-                        <button id="clear-tiktok" class="channel-clear hidden" type="button"
-                            title="Disconnect TikTok">&#x2715;</button>
-                    </div>
                     <button type="submit" class="connect-button">Connect</button>
+                    <div class="channel-field obs-link-field">
+                        <span class="channel-label">OBS</span>
+                        <input id="obs-link" class="input-field channel-input" type="text" readonly
+                            placeholder="enter a channel to get the overlay link" spellcheck="false"
+                            title="Browser source URL for OBS" aria-label="OBS overlay link">
+                        <button id="obs-link-copy" class="obs-link-copy" type="button"
+                            title="Copy the OBS overlay link" disabled>Copy</button>
+                    </div>
                 </form>
             </section>
 
@@ -130,8 +124,6 @@
                 <div class="filter-row">
                     <button class="filter-button active" data-platform="twitch" type="button"><span class="chip-dot"></span>Twitch</button>
                     <button class="filter-button active" data-platform="youtube" type="button"><span class="chip-dot"></span>YouTube</button>
-                    <button class="filter-button active" data-platform="kick" type="button"><span class="chip-dot"></span>Kick</button>
-                    <button class="filter-button active" data-platform="tiktok" type="button"><span class="chip-dot"></span>TikTok</button>
                 </div>
                 <div class="panel-header">
                     <h2>Settings</h2>
@@ -150,7 +142,7 @@
                     <div class="settings-row">
                         <span class="settings-label">7TV/BTTV/FFZ emotes</span>
                         <button id="toggle-emotes" class="switch" type="button"
-                            title="Show 7TV / BTTV / FFZ emotes in Twitch and Kick messages"></button>
+                            title="Show 7TV / BTTV / FFZ emotes in Twitch messages"></button>
                     </div>
                     <div class="settings-row">
                         <span class="settings-label">Highlight mentions</span>
@@ -181,6 +173,23 @@
                         </div>
                         <p class="alerts-hint">Alert overlay URLs (StreamElements etc.) play their sound in the
                             expanded chat. Stored only in this browser.</p>
+                    </div>
+                    <div class="settings-row">
+                        <span class="settings-label">OBS monitor</span>
+                        <button id="obs-edit" class="alerts-edit" type="button"
+                            title="Show OBS bitrate and dropped frames next to the chat">+ Add</button>
+                    </div>
+                    <div id="obs-editor" class="alerts-editor hidden">
+                        <input id="obs-url" class="input-field alerts-input" type="text" spellcheck="false"
+                            placeholder="ws://localhost:4455" aria-label="OBS WebSocket address">
+                        <input id="obs-password" class="input-field alerts-input" type="password"
+                            autocomplete="off" placeholder="server password" aria-label="OBS WebSocket password">
+                        <div class="alerts-actions">
+                            <button id="obs-remove" class="alerts-add-row" type="button">Turn off</button>
+                            <button id="obs-apply" class="alerts-apply" type="button">Apply</button>
+                        </div>
+                        <p class="alerts-hint">In OBS: Tools &rarr; WebSocket Server Settings &rarr; Enable, then
+                            Show Connect Info for the password. Read-only; stored only in this browser.</p>
                     </div>
                     <button id="clear-messages" class="settings-action" type="button">Clear chat</button>
                 </div>
@@ -218,6 +227,7 @@
                 <div class="panel-header">
                     <h2>Unified Feed</h2>
                     <span class="viewer-badge hidden"></span>
+            <span class="obs-badge hidden"></span>
                     <button id="expand-toggle" class="ghost-button small-button" type="button"
                         title="Expand the chat to fill the window">
                         <svg viewBox="0 0 448 512" aria-hidden="true"><path fill="currentColor" d="M32 32C14.3 32 0 46.3 0 64v96c0 17.7 14.3 32 32 32s32-14.3 32-32V96h64c17.7 0 32-14.3 32-32s-14.3-32-32-32H32zM64 352c0-17.7-14.3-32-32-32s-32 14.3-32 32v96c0 17.7 14.3 32 32 32h96c17.7 0 32-14.3 32-32s-14.3-32-32-32H64v-64zM320 32c-17.7 0-32 14.3-32 32s14.3 32 32 32h64v64c0 17.7 14.3 32 32 32s32-14.3 32-32V64c0-17.7-14.3-32-32-32h-96zM448 352c0-17.7-14.3-32-32-32s-32 14.3-32 32v64h-64c-17.7 0-32 14.3-32 32s14.3 32 32 32h96c17.7 0 32-14.3 32-32v-96z"/></svg>
@@ -241,6 +251,7 @@
         </main>
         <div class="player-controls">
             <span class="viewer-badge hidden"></span>
+            <span class="obs-badge hidden"></span>
             <div id="player-sources" class="player-sources hidden"></div>
             <button id="player-toggle" class="player-toggle" type="button" title="Show stream player">&#9654;</button>
             <button id="expand-exit" class="player-toggle expand-exit" type="button" title="Collapse the chat (Esc)">&#x2715;</button>

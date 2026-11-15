@@ -10,7 +10,7 @@ YouTube web player itself uses. Flow per channel:
   3. POST youtubei/v1/live_chat/get_live_chat with the continuation, render
      the actions, repeat with the next continuation at the pace YouTube asks
 
-Unlike Twitch/Kick there is no push socket, so this polls. A channel can run
+Unlike Twitch there is no push socket, so this polls. A channel can run
 a regular live and a live Short at the same time; /@handle/live only ever
 resolves to one of them, so the Shorts tab is scanned too and every live
 broadcast found gets its own chat task, all feeding the same channel key.
@@ -34,6 +34,9 @@ from ..models import Message, prefix_text
 logger = logging.getLogger(__name__)
 
 OFFLINE_RECHECK_SECONDS = 60
+# While live, the same lookup refreshes the viewer count. Each pass downloads
+# two full channel pages, so this is as fast as it sensibly goes.
+LIVE_RECHECK_SECONDS = 30
 COOKIES = {"SOCS": "CAI"}
 
 CANONICAL_WATCH_RE = re.compile(
@@ -162,7 +165,7 @@ class YouTubeChat:
                         self.platform, name, "warn", "offline",
                         f"Not live right now — rechecking every {OFFLINE_RECHECK_SECONDS}s",
                     )
-                await asyncio.sleep(OFFLINE_RECHECK_SECONDS)
+                await asyncio.sleep(LIVE_RECHECK_SECONDS if live_ids else OFFLINE_RECHECK_SECONDS)
         except asyncio.CancelledError:
             for task in chats.values():
                 task.cancel()
@@ -298,20 +301,12 @@ class YouTubeChat:
         chat = (data.get("continuationContents") or {}).get("liveChatContinuation") or {}
 
         for action in chat.get("actions") or []:
-            add = action.get("addChatItemAction")
-            if add:
-                item = add.get("item") or {}
-                renderer = item.get("liveChatTextMessageRenderer")
-                if renderer:
-                    await self._publish(name, renderer)
-                else:
-                    await self._publish_system(name, item)
-                continue
-            deleted = action.get("markChatItemAsDeletedAction")
-            if deleted and deleted.get("targetItemId"):
-                await self.hub.publish_deleted(
-                    self.platform, name, message_id=str(deleted["targetItemId"])
-                )
+            # A renderer we cannot parse is skipped; raising here would restart
+            # the chat loop and drop the rest of this batch.
+            try:
+                await self._process_action(name, action)
+            except Exception:
+                logger.exception("youtube: skipped an action that failed to parse: %.500s", action)
 
         for continuation in chat.get("continuations") or []:
             for kind in (
@@ -323,6 +318,22 @@ class YouTubeChat:
                 if found and found.get("continuation"):
                     return found["continuation"], int(found.get("timeoutMs") or 2000)
         return None, 0
+
+    async def _process_action(self, name: str, action: dict) -> None:
+        add = action.get("addChatItemAction")
+        if add:
+            item = add.get("item") or {}
+            renderer = item.get("liveChatTextMessageRenderer")
+            if renderer:
+                await self._publish(name, renderer)
+            else:
+                await self._publish_system(name, item)
+            return
+        deleted = action.get("markChatItemAsDeletedAction")
+        if deleted and deleted.get("targetItemId"):
+            await self.hub.publish_deleted(
+                self.platform, name, message_id=str(deleted["targetItemId"])
+            )
 
     async def _publish_system(self, name: str, item: dict) -> None:
         """Super Chats/Stickers, memberships and gifts, each its own renderer."""
