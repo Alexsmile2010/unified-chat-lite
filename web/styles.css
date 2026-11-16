@@ -245,8 +245,30 @@ h2 {
     background: rgba(115, 240, 168, 0.12);
 }
 
-.obs-link-field {
+.obs-style-field {
     margin-top: 4px;
+}
+
+.obs-size-input {
+    width: 64px;
+    padding: 6px 8px;
+    border-radius: 8px;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    background: rgba(4, 8, 15, 0.72);
+    color: var(--text);
+    font: inherit;
+    font-size: 0.9rem;
+}
+
+.obs-style-select {
+    width: 100%;
+    padding: 6px 10px;
+    border-radius: 8px;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    background: rgba(4, 8, 15, 0.72);
+    color: var(--text);
+    font: inherit;
+    font-size: 0.9rem;
 }
 
 .obs-link-field .channel-input {
@@ -1608,4 +1630,319 @@ html.expand-mode .player-controls {
 
 .expand-exit:hover {
     background: rgba(255, 59, 48, 0.25);
+}
+
+/* --- Overlay style "sticker" (/overlay?style=sticker) -----------------------
+   Each message is a paper sticker: light fill, heavy outline, hard offset
+   shadow and a slight tilt that stays with the message. Cards pop in from the
+   side and peel away when their time is up; app.js slides the neighbours. */
+
+@font-face {
+    font-family: "Balsamiq Sans";
+    font-style: normal;
+    font-weight: 400;
+    font-display: swap;
+    src: url("assets/fonts/balsamiq-sans-400-cyrillic.woff2") format("woff2");
+    unicode-range: U+0301, U+0400-045F, U+0490-0491, U+04B0-04B1, U+2116;
+}
+
+@font-face {
+    font-family: "Balsamiq Sans";
+    font-style: normal;
+    font-weight: 400;
+    font-display: swap;
+    src: url("assets/fonts/balsamiq-sans-400-latin.woff2") format("woff2");
+    unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
+@font-face {
+    font-family: "Balsamiq Sans";
+    font-style: normal;
+    font-weight: 700;
+    font-display: swap;
+    src: url("assets/fonts/balsamiq-sans-700-cyrillic.woff2") format("woff2");
+    unicode-range: U+0301, U+0400-045F, U+0490-0491, U+04B0-04B1, U+2116;
+}
+
+@font-face {
+    font-family: "Balsamiq Sans";
+    font-style: normal;
+    font-weight: 700;
+    font-display: swap;
+    src: url("assets/fonts/balsamiq-sans-700-latin.woff2") format("woff2");
+    unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
+/* Every measure of the sticker is in em of the overlay font, so ?size=…
+   scales the whole card and not just its text. */
+html.overlay-style-sticker .feed {
+    gap: calc(var(--overlay-font, 1rem) * 0.7);
+    padding: calc(var(--overlay-font, 1rem) * 0.75);
+}
+
+html.overlay-style-sticker .message-card,
+html.overlay-style-sticker .message-card.system-notice {
+    align-self: flex-start;
+    max-width: 100%;
+    padding: 0.45em 0.75em;
+    border: max(2px, 0.16em) solid #15131a;
+    border-radius: 0.75em 0.75em 0.75em 0.2em;
+    background: #fffdf5;
+    box-shadow: 0.25em 0.25em 0 #15131a;
+    color: #15131a;
+    font-family: "Balsamiq Sans", "IBM Plex Sans", "Segoe UI", sans-serif;
+    line-height: 1.35;
+    text-shadow: none;
+    transform: rotate(var(--tilt, -1deg));
+    will-change: transform, opacity;
+    /* The inline animation-delay carries one delay per animation, in this order. */
+    animation:
+        sticker-in 440ms cubic-bezier(0.22, 1.2, 0.36, 1) both,
+        sticker-out 300ms cubic-bezier(0.4, 0, 1, 1) forwards;
+}
+
+html.overlay-style-sticker.overlay-no-fade .message-card {
+    animation: sticker-in 440ms cubic-bezier(0.22, 1.2, 0.36, 1) both;
+}
+
+html.overlay-style-sticker.overlay-align-right .message-card {
+    align-self: flex-end;
+    border-radius: 0.75em 0.75em 0.2em 0.75em;
+    text-align: left;
+}
+
+html.overlay-style-sticker .message-card.system-notice {
+    background: #ffe66d;
+}
+
+html.overlay-style-sticker .message-card.mention {
+    background: #ffd9ea;
+}
+
+html.overlay-style-sticker .system-notice-text {
+    color: inherit;
+}
+
+/* The name sits on a chip in the platform's colour, whatever colour the
+   viewer picked for themselves: it has to read on the light sticker. */
+html.overlay-style-sticker .author-name {
+    display: inline-block;
+    padding: 0 0.45em;
+    border: max(1.5px, 0.12em) solid #15131a;
+    border-radius: 0.38em;
+    background: var(--twitch);
+    color: #fff !important;
+    line-height: 1.3;
+}
+
+html.overlay-style-sticker .message-card[data-platform="youtube"] .author-name {
+    background: #e62117;
+}
+
+/* No platform logos on stream: one platform's rules frown on showing another. */
+html.overlay-style-sticker .platform-pill {
+    display: none;
+}
+
+html.overlay-style-sticker .badge {
+    margin-right: 0.25em;
+    border-radius: 0.18em;
+}
+
+html.overlay-style-sticker .message-link {
+    color: #2a3fb8;
+}
+
+@keyframes sticker-in {
+    from {
+        opacity: 0;
+        transform: translateX(-1.6em) rotate(-6deg) scale(0.92);
+    }
+    45% {
+        opacity: 1;
+    }
+    to {
+        opacity: 1;
+        transform: rotate(var(--tilt, -1deg));
+    }
+}
+
+@keyframes sticker-out {
+    to {
+        opacity: 0;
+        transform: translateY(1em) rotate(5deg) scale(0.95);
+    }
+}
+
+/* ---------------------------------------------------------------------------
+   Overlay style "hunt": a scrap of scorched parchment with a torn edge.
+   Motion is the sticker's; the look is drawn in CSS, no game assets.
+   --------------------------------------------------------------------------- */
+
+@font-face {
+    font-family: "Alegreya";
+    font-style: normal;
+    font-weight: 500 700;
+    font-display: swap;
+    src: url("assets/fonts/alegreya-cyrillic.woff2") format("woff2");
+    unicode-range: U+0301, U+0400-045F, U+0490-0491, U+04B0-04B1, U+2116;
+}
+
+@font-face {
+    font-family: "Alegreya";
+    font-style: normal;
+    font-weight: 500 700;
+    font-display: swap;
+    src: url("assets/fonts/alegreya-latin.woff2") format("woff2");
+    unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
+@font-face {
+    font-family: "Alegreya SC";
+    font-style: normal;
+    font-weight: 800;
+    font-display: swap;
+    src: url("assets/fonts/alegreya-sc-800-cyrillic.woff2") format("woff2");
+    unicode-range: U+0301, U+0400-045F, U+0490-0491, U+04B0-04B1, U+2116;
+}
+
+@font-face {
+    font-family: "Alegreya SC";
+    font-style: normal;
+    font-weight: 800;
+    font-display: swap;
+    src: url("assets/fonts/alegreya-sc-800-latin.woff2") format("woff2");
+    unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
+/* The paper is generated noise: large blotches for the mottling of old
+   parchment, fine specks for its grain. Each card shows its own patch of it
+   (--shift) inside its own torn outline (--tear); both come from app.js. */
+html.overlay-style-hunt {
+    --hunt-paper: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='420' height='320'%3E%3Cfilter id='p' x='0' y='0' width='100%25' height='100%25'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.014 0.022' numOctaves='5' seed='11' stitchTiles='stitch' result='blot'/%3E%3CfeColorMatrix in='blot' type='matrix' values='0.95 0 0 0 -0.17  0.76 0 0 0 -0.15  0.46 0 0 0 -0.09  0 0 0 0 1' result='paper'/%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' seed='3' stitchTiles='stitch' result='grain'/%3E%3CfeColorMatrix in='grain' type='matrix' values='0 0 0 0 0.05  0 0 0 0 0.03  0 0 0 0 0.01  1.5 0 0 0 -0.52' result='specks'/%3E%3CfeMerge%3E%3CfeMergeNode in='paper'/%3E%3CfeMergeNode in='specks'/%3E%3C/feMerge%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url%28%23p%29'/%3E%3C/svg%3E");
+}
+
+html.overlay-style-hunt .feed {
+    gap: calc(var(--overlay-font, 1rem) * 0.6);
+    padding: calc(var(--overlay-font, 1rem) * 0.75);
+}
+
+html.overlay-style-hunt .message-card,
+html.overlay-style-hunt .message-card.system-notice {
+    position: relative;
+    align-self: flex-start;
+    max-width: 100%;
+    padding: 0.7em 1.15em 0.65em;
+    border: 0;
+    border-radius: 0;
+    background:
+        radial-gradient(closest-side, transparent 55%, rgba(10, 6, 3, 0.55) 100%),
+        var(--hunt-paper) var(--shift, 0 0) / 26em auto #4a3822;
+    /* Charred rim: soot at the very edge, scorched brown further in. */
+    box-shadow: inset 0 0 0.3em 0.18em rgba(6, 4, 2, 0.95), inset 0 0 1em 0.3em rgba(16, 9, 4, 0.7);
+    clip-path: var(--tear);
+    color: #f6efdf;
+    font-family: "Alegreya", Georgia, "Times New Roman", serif;
+    font-weight: 500;
+    line-height: 1.35;
+    text-shadow: 0 0.06em 0.12em rgba(0, 0, 0, 0.85), 0 0 0.3em rgba(0, 0, 0, 0.5);
+    transform: rotate(var(--tilt, -1deg));
+    will-change: transform, opacity;
+    /* The inline animation-delay carries one delay per animation, in this order. */
+    animation:
+        hunt-in 440ms cubic-bezier(0.22, 1.2, 0.36, 1) both,
+        hunt-out 300ms cubic-bezier(0.4, 0, 1, 1) forwards;
+}
+
+html.overlay-style-hunt.overlay-no-fade .message-card {
+    animation: hunt-in 440ms cubic-bezier(0.22, 1.2, 0.36, 1) both;
+}
+
+html.overlay-style-hunt.overlay-align-right .message-card {
+    align-self: flex-end;
+    text-align: left;
+}
+
+/* A glowing rim that cools right after the card lands. Only opacity moves. */
+html.overlay-style-hunt .message-card::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    box-shadow: inset 0 0 0.2em 0.12em #ffb060, inset 0 0 1em 0.1em #ff6a1a;
+    opacity: 0;
+    animation: hunt-ember 900ms ease-out both;
+    animation-delay: calc(var(--enter-delay, 0ms) + 120ms);
+}
+
+html.overlay-style-hunt .message-card.system-notice {
+    background:
+        linear-gradient(rgba(150, 24, 16, 0.62), rgba(90, 14, 10, 0.7)),
+        var(--hunt-paper) var(--shift, 0 0) / 26em auto #4a3822;
+    font-weight: 700;
+}
+
+html.overlay-style-hunt .message-card.mention {
+    background:
+        radial-gradient(closest-side, rgba(255, 214, 130, 0.3) 40%, rgba(10, 6, 3, 0.45) 100%),
+        var(--hunt-paper) var(--shift, 0 0) / 26em auto #4a3822;
+}
+
+html.overlay-style-hunt .system-notice-text {
+    color: inherit;
+}
+
+/* The name's colour is the only hint of where a message came from: no logos,
+   and the viewer's own colour is dropped so it always reads on dark paper. */
+html.overlay-style-hunt .author-name {
+    color: #d2bcff !important;
+    font-family: "Alegreya SC", "Alegreya", Georgia, serif;
+    font-weight: 800;
+    letter-spacing: 0.02em;
+}
+
+html.overlay-style-hunt .message-card[data-platform="youtube"] .author-name {
+    color: #ff9c80 !important;
+}
+
+html.overlay-style-hunt .platform-pill {
+    display: none;
+}
+
+html.overlay-style-hunt .badge {
+    margin-right: 0.25em;
+}
+
+html.overlay-style-hunt .message-link {
+    color: #ffd08a;
+}
+
+@keyframes hunt-in {
+    from {
+        opacity: 0;
+        transform: translateX(-1.6em) rotate(-6deg) scale(0.92);
+    }
+    45% {
+        opacity: 1;
+    }
+    to {
+        opacity: 1;
+        transform: rotate(var(--tilt, -1deg));
+    }
+}
+
+@keyframes hunt-out {
+    to {
+        opacity: 0;
+        transform: translateY(1em) rotate(5deg) scale(0.95);
+    }
+}
+
+@keyframes hunt-ember {
+    from {
+        opacity: 0.95;
+    }
+    to {
+        opacity: 0;
+    }
 }

@@ -4,7 +4,17 @@ const isPopout = document.body.dataset.mode === "popout";
 const pageParams = new URLSearchParams(window.location.search);
 const isOverlay = isPopout && (window.location.pathname === "/overlay" || pageParams.has("overlay"));
 const OVERLAY_FADE_MS = Math.max(Number(pageParams.get("fade")) || 60, 5) * 1000;
-const OVERLAY_FADE_OUT_MS = 2500;
+// Overlay message styles (?style=…). "classic" is outlined text that fades;
+// each other style brings its own card look and enter/exit animations, and
+// names the exit animation so finished cards can be removed.
+const OVERLAY_STYLES = {
+  classic: { exitAnimation: "overlay-fade", exitMs: 2500 },
+  sticker: { exitAnimation: "sticker-out", exitMs: 300, enterMs: 440, slideNeighbours: true, tilts: ["-1deg", "0.8deg"] },
+  hunt: { exitAnimation: "hunt-out", exitMs: 300, enterMs: 440, slideNeighbours: true, tilts: ["-1deg", "0.8deg"], torn: true },
+};
+const overlayStyleName = Object.hasOwn(OVERLAY_STYLES, pageParams.get("style")) ? pageParams.get("style") : "classic";
+const overlayStyle = OVERLAY_STYLES[overlayStyleName];
+const OVERLAY_FADE_OUT_MS = overlayStyle.exitMs;
 const OVERLAY_NEVER_FADE = pageParams.get("fade") === "0";
 const overlayOptions = {
   size: Math.min(Math.max(Number(pageParams.get("size")) || 0, 0), 64),
@@ -19,6 +29,7 @@ if (isOverlay) {
   if (overlayOptions.alignRight) root.classList.add("overlay-align-right");
   if (!overlayOptions.icons) root.classList.add("overlay-no-icons");
   if (OVERLAY_NEVER_FADE) root.classList.add("overlay-no-fade");
+  if (overlayStyleName !== "classic") root.classList.add(`overlay-style-${overlayStyleName}`);
 }
 
 // Expand (?expand=1): the main page expands into the popout layout in place.
@@ -469,6 +480,7 @@ if (syncChannel) {
 // a setting.
 const EMPTY_STATE_HTML = `<div class="empty-state">No messages yet. Connect to a channel to get started.</div>`;
 const FLUSH_FALLBACK_MS = 100;
+const SLIDE_MAX_CARDS = 40; // above this the neighbour slide costs more than it shows
 const cardTemplate = document.createElement("template");
 const cardById = new Map();
 let pendingMessages = [];
@@ -532,6 +544,10 @@ function flushPending() {
       feedEl.textContent = "";
       feedHasCards = true;
     }
+    const slide = isOverlay && overlayStyle.slideNeighbours && feedEl.childElementCount <= SLIDE_MAX_CARDS;
+    const cardsBefore = slide ? [...feedEl.children] : [];
+    const topsBefore = cardsBefore.map((card) => card.getBoundingClientRect().top);
+
     cardTemplate.innerHTML = batch.map(renderCard).join("");
     for (const card of cardTemplate.content.children) cardById.set(card.dataset.id, card);
     feedEl.appendChild(cardTemplate.content);
@@ -539,6 +555,16 @@ function flushPending() {
       removeCard(feedEl.firstElementChild);
     }
     if (pinnedToBottom) feedEl.scrollTop = feedEl.scrollHeight;
+
+    // FLIP: new cards push the others up; glide each one from where it was
+    // instead of letting it jump. Added on top of the card's own transform.
+    cardsBefore.forEach((card, i) => {
+      if (!card.isConnected) return;
+      const moved = topsBefore[i] - card.getBoundingClientRect().top;
+      if (Math.abs(moved) < 1) return;
+      card.animate([{ transform: `translateY(${moved}px)` }, { transform: "translateY(0)" }],
+        { duration: 340, easing: "cubic-bezier(0.2, 0.8, 0.2, 1)", composite: "add" });
+    });
   }
   if (!pinnedToBottom) updateScrollButton();
 }
@@ -553,11 +579,62 @@ function markDeleted(ids) {
   for (const id of wanted) cardById.get(id)?.classList.add("deleted");
 }
 
-// Negative delay resumes the fade mid-life after a DOM rebuild.
-function overlayFadeStyle(message) {
-  if (!isOverlay || OVERLAY_NEVER_FADE) return "";
+// Small stable hash, so a message keeps the same tilt across rebuilds.
+function hashOf(text) {
+  let hash = 0;
+  for (let i = 0; i < text.length; i += 1) hash = (hash * 31 + text.charCodeAt(i)) | 0;
+  return Math.abs(hash);
+}
+
+// Repeatable random numbers from a seed (mulberry32), so a message is torn
+// the same way every time it is drawn.
+function seededRandom(seed) {
+  let state = seed >>> 0;
+  return () => {
+    state = (state + 0x6d2b79f5) >>> 0;
+    let t = state;
+    t = Math.imul(t ^ (t >>> 15), t | 1);
+    t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+
+// A jagged clip-path for a scrap of paper: points along each side, pushed in
+// by mostly shallow nicks with the odd deep bite.
+function tornOutline(random) {
+  const depth = () => `${(random() ** 2 * 0.5).toFixed(3)}em`;
+  const far = () => `calc(100% - ${depth()})`;
+  const across = 26;
+  const down = 6;
+  const points = [];
+  for (let i = 0; i <= across; i += 1) points.push(`${((i / across) * 100).toFixed(1)}% ${depth()}`);
+  for (let i = 1; i < down; i += 1) points.push(`${far()} ${((i / down) * 100).toFixed(1)}%`);
+  for (let i = across; i >= 0; i -= 1) points.push(`${((i / across) * 100).toFixed(1)}% ${far()}`);
+  for (let i = down - 1; i > 0; i -= 1) points.push(`${depth()} ${((i / down) * 100).toFixed(1)}%`);
+  return `polygon(${points.join(", ")})`;
+}
+
+// Inline style for an overlay card. Negative delays resume an animation
+// mid-life after a DOM rebuild: an old message does not pop in again, and
+// its exit still starts on time.
+function overlayCardStyle(message) {
+  if (!isOverlay) return "";
   const age = Math.max(Date.now() - new Date(message.timestamp).getTime(), 0);
-  return ` style="animation-delay: ${OVERLAY_FADE_MS - OVERLAY_FADE_OUT_MS - age}ms"`;
+  const delays = [];
+  if (overlayStyle.enterMs) delays.push(`${-age}ms`);
+  if (!OVERLAY_NEVER_FADE) delays.push(`${OVERLAY_FADE_MS - OVERLAY_FADE_OUT_MS - age}ms`);
+  const rules = [];
+  if (delays.length) rules.push(`animation-delay: ${delays.join(", ")}`);
+  if (overlayStyle.tilts) rules.push(`--tilt: ${overlayStyle.tilts[hashOf(String(message.id)) % overlayStyle.tilts.length]}`);
+  if (overlayStyle.torn) {
+    const random = seededRandom(hashOf(String(message.id)));
+    rules.push(`--tear: ${tornOutline(random)}`);
+    // Which patch of the paper texture this card shows.
+    rules.push(`--shift: ${Math.round(random() * 100)}% ${Math.round(random() * 100)}%`);
+    // The glowing rim is a pseudo-element, so it takes its delay from here.
+    rules.push(`--enter-delay: ${-age}ms`);
+  }
+  return rules.length ? ` style="${rules.join("; ")}"` : "";
 }
 
 function renderCard(message) {
@@ -565,7 +642,7 @@ function renderCard(message) {
   if (highlightMentions && message.kind !== "system" && mentionRegex?.test(message.text)) {
     messageClass += " mention";
   }
-  const open = `<article class="${messageClass}${message.kind === "system" ? " system-notice" : ""}" data-id="${escapeHtml(message.id)}" data-platform="${message.platform}"${overlayFadeStyle(message)}>`;
+  const open = `<article class="${messageClass}${message.kind === "system" ? " system-notice" : ""}" data-id="${escapeHtml(message.id)}" data-platform="${message.platform}"${overlayCardStyle(message)}>`;
   const lead = `<span class="message-time">${formatTime(message.timestamp)}</span> ${showPlatform ? platformMarkup(message.platform) : ""}${sourceAvatarMarkup(message)}`;
   if (message.kind === "system") {
     const paid = message.bits > 0 || Boolean(message.notice);
@@ -905,6 +982,10 @@ function connectFromInputs({ updateUrl = true } = {}) {
 // channel fields, so it can be pasted into OBS as is.
 const obsLinkEl = document.getElementById("obs-link");
 const obsLinkCopyEl = document.getElementById("obs-link-copy");
+const obsStyleEl = document.getElementById("obs-style");
+const obsSizeEl = document.getElementById("obs-size");
+const OBS_STYLE_STORAGE_KEY = "overlayStyle";
+const OBS_SIZE_STORAGE_KEY = "overlaySize";
 let obsCopiedTimer = 0;
 
 function updateObsLink() {
@@ -915,6 +996,10 @@ function updateObsLink() {
     if (channel) url.searchParams.set(platform, channel);
   }
   const hasChannel = url.searchParams.size > 0;
+  const style = obsStyleEl?.value || "classic";
+  if (style !== "classic") url.searchParams.set("style", style);
+  const size = Math.round(Number(obsSizeEl?.value));
+  if (size >= 12 && size <= 64) url.searchParams.set("size", String(size));
   obsLinkEl.value = hasChannel ? url.href : "";
   obsLinkCopyEl.disabled = !hasChannel;
 }
@@ -942,6 +1027,25 @@ if (obsLinkEl) {
   obsLinkCopyEl.addEventListener("click", copyObsLink);
   obsLinkEl.addEventListener("focus", () => obsLinkEl.select());
   for (const input of Object.values(channelInputs)) input.addEventListener("input", updateObsLink);
+  try {
+    const saved = window.localStorage.getItem(OBS_STYLE_STORAGE_KEY);
+    if (saved && Object.hasOwn(OVERLAY_STYLES, saved)) obsStyleEl.value = saved;
+  } catch (_) {}
+  try {
+    obsSizeEl.value = window.localStorage.getItem(OBS_SIZE_STORAGE_KEY) || "";
+  } catch (_) {}
+  obsSizeEl.addEventListener("input", () => {
+    try {
+      window.localStorage.setItem(OBS_SIZE_STORAGE_KEY, obsSizeEl.value);
+    } catch (_) {}
+    updateObsLink();
+  });
+  obsStyleEl.addEventListener("change", () => {
+    try {
+      window.localStorage.setItem(OBS_STYLE_STORAGE_KEY, obsStyleEl.value);
+    } catch (_) {}
+    updateObsLink();
+  });
 }
 
 function updateClearButtons(channels) {
@@ -1799,7 +1903,7 @@ if (isPopout) {
     // message, so nothing has to sweep the feed on a timer.
     feedEl.addEventListener("animationend", (event) => {
       const card = event.target;
-      if (event.animationName !== "overlay-fade" || !card.classList?.contains("message-card")) return;
+      if (event.animationName !== overlayStyle.exitAnimation || !card.classList?.contains("message-card")) return;
       const id = card.dataset.id;
       removeCard(card);
       state.messages = state.messages.filter((message) => message.id !== id);

@@ -106,6 +106,18 @@
                             title="Disconnect YouTube">&#x2715;</button>
                     </div>
                     <button type="submit" class="connect-button">Connect</button>
+                    <div class="channel-field obs-style-field">
+                        <span class="channel-label">Style</span>
+                        <select id="obs-style" class="obs-style-select" aria-label="OBS overlay message style"
+                            title="How messages look in the OBS overlay">
+                            <option value="classic">Classic — outlined text</option>
+                            <option value="sticker">Sticker — framed cards</option>
+                            <option value="hunt">Hunt — scorched paper</option>
+                        </select>
+                        <input id="obs-size" class="obs-size-input" type="number" min="12" max="64" step="1"
+                            placeholder="px" aria-label="Overlay text size in pixels"
+                            title="Text size in the overlay, in pixels (empty = 16). The whole card scales with it.">
+                    </div>
                     <div class="channel-field obs-link-field">
                         <span class="channel-label">OBS</span>
                         <input id="obs-link" class="input-field channel-input" type="text" readonly
