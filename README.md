@@ -107,7 +107,34 @@ This service stores **no data** — it is a pure pass-through proxy:
 
 ## Self-hosting
 
-### Docker (recommended)
+### Run on macOS (no Docker)
+
+Needs Python 3.11 or newer (`python3 --version`).
+
+```bash
+./scripts/multichat.sh start    # first run creates .venv and installs requirements
+./scripts/multichat.sh status
+./scripts/multichat.sh stop
+```
+
+- `start` runs the server in the background, so closing the Terminal window keeps it running. Open <http://localhost:8100/>.
+- Logs go to `logs/multichat.log`, the PID to `logs/multichat.pid`.
+- `MULTICHAT_PORT` (default `8100`) and `MULTICHAT_HOST` (default `0.0.0.0`, reachable from other devices on your network; set `127.0.0.1` to allow this machine only) change where it listens.
+
+### Run manually (any OS)
+
+```bash
+python3 -m venv .venv
+.venv/bin/pip install -r server/requirements.txt
+.venv/bin/python -m uvicorn server.main:app --host 0.0.0.0 --port 8100 \
+  --no-access-log --log-level warning --ws-per-message-deflate false
+```
+
+On Windows use `python` instead of `python3` and `.venv\Scripts\` instead of `.venv/bin/`. This runs in the foreground, so it stops when the terminal closes.
+
+### Docker (alternative)
+
+Docker Desktop keeps a Linux VM running and uses noticeably more memory than the native run above.
 
 Save this as `docker-compose.yml`:
 
@@ -145,6 +172,7 @@ curl -X POST http://localhost:8100/announce \
 
 - Clear: same call with `"text":""` (a restart also clears it)
 - Without a token configured the endpoint answers 404
+- Without Docker, export `ANNOUNCE_TOKEN` in your shell before `./scripts/multichat.sh start`
 
 
 
